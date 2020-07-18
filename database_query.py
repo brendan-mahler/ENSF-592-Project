@@ -14,13 +14,13 @@ class DBQuery(dict):
         self.headers = []
         if type == 'volume':
             if year == '2016':
-                collection = database["traffic_flow_2016"]
+                collection = database["traffic_volume_2016"]
                 self.headers = ['secname','the_geom','year_vol','shape_leng','volume']
             elif year == '2017':
-                collection = database["traffic_flow_2017"]
+                collection = database["traffic_volume_2017"]
                 self.headers = ['year','segment_name','the_geom','length_m','volume']
             else:
-                collection = database["traffic_flow_2018"]
+                collection = database["traffic_volume_2018"]
                 self.headers = ['YEAR','SECNAME','Shape_Leng','VOLUME','multilinestring']
         else:
             collection = database["traffic_indicents"]
@@ -46,7 +46,7 @@ class DBQuery(dict):
                     tp = (float(num[0].strip(strippables)), float(num[1].strip(strippables)))
                     location_list.append(tp)
                 self[key].append(location_list)
-            elif key.lower() == 'volume' or key.lower() == 'count':
+            elif 'volume' in key.lower() or key.lower() == 'count':
                 self[key].append(int(dictionary[key]))
             elif key.lower() == 'latitude' or key.lower() == 'longitude':
                 self[key].append(float(dictionary[key]))
@@ -104,18 +104,11 @@ def find_year(collection, year='', limit=1):
     return collection.find({"START_DT":{"$regex":year}}).limit(limit)
 
 def test():
-    myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-    mydb = myclient["mydatabase"]
-    incident = {}
-    collection_test = mydb["traffic_indicents"]
-    year = '2018'
-    q = collection_test.find({'START_DT':{'$regex':year}})
-    for row in q:
-        incident[row['INCIDENT INFO'].lower()] = incident.get(row['INCIDENT INFO'].lower(),0) + int(row['Count'])
-    print(max(incident.values()))
-    query_test = DBQuery(mydb, year='2018')
-    query = DBQuery(mydb,type='incidents')      
-    print(query.get_coordinates(year=year))
+    myclient = pymongo.MongoClient("mongodb+srv://Do_Trong_Anh:NMKygTFOyPYdBv2C@cluster0.oyu7v.mongodb.net/calgary_traffic?retryWrites=true&w=majority")
+    mydb = myclient["calgary_traffic"]
+    print(mydb.list_collection_names())
+    query = DBQuery(mydb,year='2018')      
+    print(query.total_max())
     
 if __name__ == '__main__':
     test()
