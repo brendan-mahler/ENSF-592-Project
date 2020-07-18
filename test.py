@@ -1,5 +1,5 @@
 import operator
-from tabulate import tabulate
+import pandas as pd
 import pymongo
 
 client = pymongo.MongoClient(
@@ -15,12 +15,18 @@ volume_2018 = traffic_2018.find({"YEAR": "2018"}, {"VOLUME"})
 volume_2017 = traffic_2017.find({"year": "2017"}, {"volume"})
 volume_2016 = traffic_2016.find({"year_vol": "2016"}, {"volume"})
 
+#sorts the data by devreasing volume
+def sort_table_by_volume(year):
+    df = pd.DataFrame(list(year.find()))
+    if year == traffic_2018:
+        df['VOLUME'] = df['VOLUME'].astype(int)
+        df = df.sort_values('VOLUME', ascending=False)
+    else:
+        df['volume'] = df['volume'].astype(int)
+        df = df.sort_values('volume', ascending=False)
+    print(df)
 
-#Not yet completed
-# def sort_by_name(year):
-for x in traffic_2017.find().sort('segment_name'):
-    print(x)
-
+sort_table_by_volume(traffic_2017)
 # Returns the index and corresponding highest volume
 def highest_volume(year):
     sorted_v = {}
