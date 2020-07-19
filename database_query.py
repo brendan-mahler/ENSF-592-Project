@@ -23,7 +23,7 @@ class DBQuery(dict):
                 collection = database["traffic_volume_2018"]
                 self.headers = ['YEAR','SECNAME','Shape_Leng','VOLUME','multilinestring']
         else:
-            collection = database["traffic_indicents"]
+            collection = database["traffic_incidents"]
             self.headers = ['INCIDENT INFO','DESCRIPTION','START_DT','MODIFIED_DT','QUADRANT','Longitude','Latitude','location','Count','id']
         read_table = collection.find({},{'_id':0})
         dictionary = collection.find_one()
@@ -43,7 +43,7 @@ class DBQuery(dict):
                 location_list = []
                 for coordinates in coordinate_list:
                     num = coordinates.split()
-                    tp = (float(num[0].strip(strippables)), float(num[1].strip(strippables)))
+                    tp = (float(num[1].strip(strippables)), float(num[0].strip(strippables)))
                     location_list.append(tp)
                 self[key].append(location_list)
             elif 'volume' in key.lower() or key.lower() == 'count':
@@ -68,16 +68,22 @@ class DBQuery(dict):
                 return amount_list
         return amount
     
-
-    def max_accident(self, year='2020'):
+    def get_incident_info(self,year='2016'):
         dict_unique = {}
         for i in range(len(self['INCIDENT INFO'])):
             if year in self['START_DT'][i]:
                 dict_unique[self['INCIDENT INFO'][i]] = dict_unique.get(self['INCIDENT INFO'][i],0)+int(self['Count'][i])
+        return dict_unique
+
+    def max_accident(self, year='2020'):
+        dict_unique = self.get_incident_info(year=year)
         max_count = max(dict_unique.items(), key=operator.itemgetter(1))
         return max_count
             
-        
+    def sort_incident_info(self,year='2016'):
+        dict_unique = self.get_incident_info(year=year)
+        new_dict = {k:v for k,v in sorted(dict_unique.items(), key=lambda item:item[1],reverse=True)}
+        return new_dict
         
     def get_coordinates(self, year='2016'):
         list_coordinates = []
@@ -85,11 +91,13 @@ class DBQuery(dict):
         for i in range(len(headers)):
             key = headers[i]
             if key.lower() == 'latitude':
-                most_dangerous_place = self.max_accident(year=year)[0]
+                incident_info = self.get_incident_info(year=year)
+                highest_accident_count = max(incident_info.items(), key=operator.itemgetter(1))[1]
                 for i in range(len(self['INCIDENT INFO'])):
-                    if self['INCIDENT INFO'][i]==most_dangerous_place:
-                        tp = (self['Latitude'][i],self['Longitude'][i])
-                        list_coordinates.append(tp)
+                    if  year in self['START_DT'][i]:
+                        if incident_info[self['INCIDENT INFO'][i]]==highest_accident_count:
+                            tp = (self['Latitude'][i],self['Longitude'][i])
+                            list_coordinates.append(tp)
                 break
             elif key == 'the_geom':
                 data = self[key]
@@ -104,11 +112,15 @@ def find_year(collection, year='', limit=1):
     return collection.find({"START_DT":{"$regex":year}}).limit(limit)
 
 def test():
-    myclient = pymongo.MongoClient("mongodb+srv://Do_Trong_Anh:NMKygTFOyPYdBv2C@cluster0.oyu7v.mongodb.net/calgary_traffic?retryWrites=true&w=majority")
+    secret = open('confidentials.txt')
+    info = []
+    for line in secret:
+        info.append(line.strip())
+    myclient = pymongo.MongoClient("mongodb+srv://"+info[1]+":"+info[0]+"@cluster0.oyu7v.mongodb.net/"+info[2]+"?retryWrites=true&w=majority")
     mydb = myclient["calgary_traffic"]
     print(mydb.list_collection_names())
-    query = DBQuery(mydb,year='2018')      
-    print(query.total_max())
+    query = DBQuery(mydb,type='incident')      
+    print(query.get_coordinates(year='2016'))
     
 if __name__ == '__main__':
     test()

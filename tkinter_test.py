@@ -15,6 +15,7 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from ScrollableFrame import *
+
 """
 myclient = pymongo.MongoClient("mongodb+srv://Do_Trong_Anh:NMKygTFOyPYdBv2C@cluster0.oyu7v.mongodb.net/calgary_traffic?retryWrites=true&w=majority")
 mydb = myclient["calgary_traffic"]
@@ -44,7 +45,7 @@ def b4CallBack():
         button4.configure(text='Compass')
     else: button4.config(text='Map')
 
-top = tk.Tk(className='Testing')
+top = tk.Tk()
 left_frame = tk.Frame(top,height=480,width=240,bg='grey',borderwidth=50)
 left_frame.pack(side=tk.LEFT,fill='both')
 right_frame = tk.Frame(top,height=480,width=840)
@@ -101,8 +102,14 @@ for header in headers:
     data[header] = data_list
 
 scrollable_frame = ScrollableFrame(c)
+scrollable_frame.add_image('incidents_2016.png')
+scrollable_frame.pack(fill=tk.BOTH,expand=True)
+"""
 scrollable_frame.add_table(data)
 scrollable_frame.pack(fill=tk.BOTH,expand=True)
+"""
+
+
 
 label = tk.Label(left_frame,text='Status:',fg='white',bg='grey')
 label.grid(row=14,column=1,padx=10,pady=10)
