@@ -25,19 +25,30 @@ class DBQuery(dict):
         else:
             collection = database["traffic_incidents"]
             self.headers = ['INCIDENT INFO','DESCRIPTION','START_DT','MODIFIED_DT','QUADRANT','Longitude','Latitude','location','Count','id']
-        read_table = collection.find({},{'_id':0})
+        read_table = collection.find({},{'_id':None})
         dictionary = collection.find_one()
         for key in dictionary.keys():
+            if key == '_id':continue
             self[key] = []
         for x in read_table:
             self.count(x)
     
     def data_frame(self):
         return pd.DataFrame(self)
+    
+    def get_year(self,year='2016'):
+        new_dict = dict(self)
+        for key in new_dict.keys():
+            n = len(self[key])
+            for i in range(n-1,-1,-1):
+                if year not in new_dict['START_DT'][i]:
+                    new_dict[key].pop(i)
+        return new_dict
             
     def count(self, dictionary):
         strippables = string.ascii_letters + string.whitespace + '()\'\"'
         for key in dictionary.keys():
+            if key == '_id': continue
             if key == 'the_geom' or key == 'multilinestring':
                 coordinate_list = dictionary[key].strip(strippables).split(',')
                 location_list = []
@@ -85,6 +96,26 @@ class DBQuery(dict):
         new_dict = {k:v for k,v in sorted(dict_unique.items(), key=lambda item:item[1],reverse=True)}
         return new_dict
         
+    def get_sorted_incident(self,year='2016'):
+        new_table = {}
+        new_table['INCIDENT INFO'] = []
+        new_table['Count'] = []
+        sorted_dict = self.sort_incident_info(year=year)
+        for key, value in sorted_dict.items():
+            new_table['INCIDENT INFO'].append(key)
+            new_table['Count'].append(value)
+        return new_table
+    
+    def limit(self, num):
+        new_dict = dict(self)
+        for key in self.keys():
+            n = len(self[key])
+            if n <= num: 
+                return new_dict
+            for i in range(num,n,1):
+                new_dict[key].pop(num)
+        return new_dict
+    
     def get_coordinates(self, year='2016'):
         list_coordinates = []
         headers = list(self.keys())
@@ -120,7 +151,7 @@ def test():
     mydb = myclient["calgary_traffic"]
     print(mydb.list_collection_names())
     query = DBQuery(mydb,type='incident')      
-    print(query.get_coordinates(year='2016'))
+    print(query.limit(3))
     
 if __name__ == '__main__':
     test()

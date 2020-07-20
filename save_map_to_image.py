@@ -39,31 +39,31 @@ def test():
         info.append(line.strip())
     myclient = pymongo.MongoClient("mongodb+srv://"+info[1]+":"+info[0]+"@cluster0.oyu7v.mongodb.net/"+info[2]+"?retryWrites=true&w=majority")
     mydb = myclient["calgary_traffic"]
-    """
+
     q_incidents = DBQuery(mydb,type='incident') 
     c_incidents_16 = q_incidents.get_coordinates(year='2016')
     c_incidents_17 = q_incidents.get_coordinates(year='2017')
     c_incidents_18 = q_incidents.get_coordinates(year='2018')
-    """
+
     q_flow_16 = DBQuery(mydb)
     c_flow_16 = q_flow_16.get_coordinates()
     q_flow_17 = DBQuery(mydb,year='2017')
     c_flow_17 = q_flow_17.get_coordinates()
     q_flow_18 = DBQuery(mydb,year='2018')
     c_flow_18 = q_flow_18.get_coordinates()
-    """
+
     m_incidents_16 = folium.Map(location=find_midpoint(c_incidents_16),zoom_start=13)
     add_markers(m_incidents_16,c_incidents_16)
-    save_to_img(m_incidents_16,'incidents_2016.png')
+    m_incidents_16.save('incidents_2016.html')
     
     m_incidents_17 = folium.Map(location=find_midpoint(c_incidents_17),zoom_start=13)
     add_markers(m_incidents_17,c_incidents_17)
-    save_to_img(m_incidents_17,'incidents_2017.png')
+    m_incidents_17.save('incidents_2017.html')
     
     m_incidents_18 = folium.Map(location=find_midpoint(c_incidents_18),zoom_start=13)
     add_markers(m_incidents_18,c_incidents_18)
-    save_to_img(m_incidents_18,'incidents_2018.png')
-    """
+    m_incidents_18.save('incidents_2018.html')
+
     mid_flow_16 = find_midpoint(c_flow_16)
     mid_flow_17 = find_midpoint(c_flow_17)
     mid_flow_18 = find_midpoint(c_flow_18)
@@ -71,15 +71,15 @@ def test():
     
     m_flow_16 = folium.Map(location=mid_flow_16,zoon_start=13)
     add_markers(m_flow_16,c_flow_16)
-    save_to_img(m_flow_16,'traffic_2016.png')
+    m_flow_16.save('traffic_2016.html')
     
     m_flow_17 = folium.Map(location=mid_flow_17,zoom_start=13)
     add_markers(m_flow_17,c_flow_17)
-    save_to_img(m_flow_17,'traffic_2017.png')
+    m_flow_17.save('traffic_2017.html')
     
     m_flow_18 = folium.Map(location=mid_flow_18,zoom_start=13)
     add_markers(m_flow_18,c_flow_18)
-    save_to_img(m_flow_18,'traffic_2018.png')
+    m_flow_18.save('traffic_2018.html')
          
     
 if __name__ == '__main__':
