@@ -15,36 +15,205 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from ScrollableFrame import *
-"""
+
+def parse_to_frame(cur,headers):
+    new_dict = {}
+    for header in headers:
+        new_dict[header] = []
+    for row in cur:
+        for header in headers:
+            new_dict[header].append(row[header])
+    return new_dict
+        
+def limit(old_dict, num):
+        new_dict = dict(old_dict)
+        for key in old_dict.keys():
+            n = len(old_dict[key])
+            if n <= num: 
+                return new_dict
+            for i in range(num,n,1):
+                new_dict[key].pop(num)
+        return new_dict
+
+
 myclient = pymongo.MongoClient("mongodb+srv://Do_Trong_Anh:NMKygTFOyPYdBv2C@cluster0.oyu7v.mongodb.net/calgary_traffic?retryWrites=true&w=majority")
 mydb = myclient["calgary_traffic"]
+col_v_16 = mydb["traffic_volume_2016"]
+col_v_17 = mydb["traffic_volume_2017"]
+col_v_18 = mydb["traffic_volume_2018"]
+h_v_16 = []
+h_v_17 = []
+h_v_18 = []
+for key in col_v_16.find_one():
+    if key == '_id': continue
+    h_v_16.append(key)
+for key in col_v_17.find_one():
+    if key == '_id': continue
+    h_v_17.append(key)
+for key in col_v_18.find_one():
+    if key == '_id': continue
+    h_v_18.append(key)
+    
+d_v_16 = parse_to_frame(col_v_16.find().limit(100),h_v_16)
+d_v_17 = parse_to_frame(col_v_17.find().limit(100),h_v_17)
+d_v_18 = parse_to_frame(col_v_18.find().limit(100),h_v_18)
+d_v_16_s = parse_to_frame(col_v_16.find().sort('volume',-1).limit(100),h_v_16)
+d_v_17_s = parse_to_frame(col_v_17.find().sort('volume',-1).limit(100),h_v_17)
+d_v_18_s = parse_to_frame(col_v_18.find().sort('VOLUME',-1).limit(100),h_v_18)
+
 volume_2016 = DBQuery(mydb,year='2016')
 volume_2017 = DBQuery(mydb,year='2017')
 volume_2018 = DBQuery(mydb,year='2018')
+m_v_16 = volume_2016.total_max()
+m_v_17 = volume_2017.total_max()
+m_v_18 = volume_2018.total_max()
+
+col_a = mydb["traffic_incidents"]
+h_a = []
+for key in col_a.find_one():
+    if key == '_id': continue
+    h_a.append(key)
+
+d_a_16 = parse_to_frame(col_a.find({'START_DT':{'$regex':'2016'}}).limit(100),h_a)
+d_a_17 = parse_to_frame(col_a.find({'START_DT':{'$regex':'2017'}}).limit(100),h_a)
+d_a_18 = parse_to_frame(col_a.find({'START_DT':{'$regex':'2018'}}).limit(100),h_a)
+
 traffic_accidents = DBQuery(mydb,type='accident')
-"""
+d_a_16_s = limit(traffic_accidents.get_sorted_incident(year='2016'),20)
+d_a_17_s = limit(traffic_accidents.get_sorted_incident(year='2017'),20)
+d_a_18_s = limit(traffic_accidents.get_sorted_incident(year='2018'),20)
+m_a_16 = traffic_accidents.max_accident(year='2016')[1]
+m_a_17 = traffic_accidents.max_accident(year='2017')[1]
+m_a_18 = traffic_accidents.max_accident(year='2018')[1]
+
 
 def b1CallBack():
-    if button1.cget('text') == 'Read':
-        button1.configure(text='Write')
-    else: button1.config(text='Read')
-
+    try:
+        label2.configure(text='Executing...',bg='yellow')
+        try:
+            canvas.get_tk_widget().pack_forget()
+        except: pass
+        try:
+            scrollable_frame.pack(fill='both',expand=True)
+        except: pass
+        scrollable_frame.clear()
+        choice_1 = combo1.get()
+        choice_2 = combo2.get()
+        table = {}
+        if choice_1 =='Traffic Volume':
+            if choice_2 == '2016':
+                table = d_v_16
+            elif choice_2 == '2017':
+                table = d_v_17
+            else:
+                table = d_v_18
+        else:
+            if choice_2 == '2016':
+                table = d_a_16
+            elif choice_2 == '2017':
+                table = d_a_17
+            else:
+                table = d_a_18
+        scrollable_frame.add_table(table)
+        label2.configure(text='Success',bg='green')
+    except :
+        label2.configure(text='Failure',bg='red')
+        
 def b2CallBack():
-    if button2.cget('text') == 'Sort':
-        button2.configure(text='Shuffle')
-    else: button2.config(text='Sort')
+    try:
+        label2.configure(text='Executing...',bg='yellow')
+        try:
+            canvas.get_tk_widget().pack_forget()
+        except: pass
+        try:
+            scrollable_frame.pack(fill='both',expand=True)
+        except: pass
+        scrollable_frame.clear()
+        choice_1 = combo1.get()
+        choice_2 = combo2.get()
+        table = {}
+        if choice_1 =='Traffic Volume':
+            if choice_2 == '2016':
+                table = d_v_16_s
+            elif choice_2 == '2017':
+                table = d_v_17_s
+            else:
+                table = d_v_18_s
+        else:
+            if choice_2 == '2016':
+                table = d_a_16_s
+            elif choice_2 == '2017':
+                table = d_a_17_s
+            else:
+                table = d_a_18_s
+        scrollable_frame.add_table(table)
+        label2.configure(text='Success',bg='green')
+    except :
+        label2.configure(text='Failure',bg='red')
     
 def b3CallBack():
-    if button3.cget('text') == 'Analyze':
-        button3.configure(text='Generalize')
-    else: button3.config(text='Analyze')
+    try:
+        label2.configure(text='Executing...',bg='yellow')
+        try:
+            scrollable_frame.pack_forget()
+        except: pass
+        choice_1 = combo1.get()        
+        x_axis = [2016,2017,2018]
+        y_axis = [0, 0, 0]
+        y_label = ''
+        if choice_1 =='Traffic Volume':
+            y_axis = [m_v_16, m_v_17, m_v_18]
+            y_label = 'Highest traffic volume'
+        else:
+            y_axis = [m_a_16, m_a_17, m_a_18]
+            y_label = 'Highest concentration of accidents'
+
+        fig.clear()
+        a = fig.add_subplot(111)
+        a.plot(x_axis,y_axis)
+        a.set_ylabel(y_label, fontsize=12)
+        a.set_xlabel("Year", fontsize=14)  
+        try:
+            canvas.get_tk_widget().pack()
+        except: pass
+        canvas.draw()
+        label2.configure(text='Success',bg='green')
+    except :
+        label2.configure(text='Failure',bg='red')
     
 def b4CallBack():
-    if button4.cget('text') == 'Map':
-        button4.configure(text='Compass')
-    else: button4.config(text='Map')
+    try:
+        label2.configure(text='Executing...',bg='yellow')
+        try:
+            canvas.get_tk_widget().pack_forget()
+        except: pass
+        try:
+            scrollable_frame.pack(fill='both',expand=True)
+        except: pass
+        scrollable_frame.clear()
+        choice_1 = combo1.get()
+        choice_2 = combo2.get()
+        file_name = ''
+        if choice_1 =='Traffic Volume':
+            if choice_2 == '2016':
+                 file_name = 'traffic_2016.png'
+            elif choice_2 == '2017':
+                file_name = 'traffic_2017.png'
+            else:
+                file_name = 'traffic_2018.png'
+        else:
+            if choice_2 == '2016':
+                file_name = 'incidents_2016.png'
+            elif choice_2 == '2017':
+                file_name = 'incidents_2017.png'
+            else:
+                file_name = 'incidents_2018.png'
+        scrollable_frame.add_image(file_name)
+        label2.configure(text='Success',bg='green')
+    except :
+        label2.configure(text='Failure',bg='red')
 
-top = tk.Tk(className='Testing')
+top = tk.Tk()
 left_frame = tk.Frame(top,height=480,width=240,bg='grey',borderwidth=50)
 left_frame.pack(side=tk.LEFT,fill='both')
 right_frame = tk.Frame(top,height=480,width=840)
@@ -78,18 +247,11 @@ p= np.array ([16.23697,     17.31653,     17.22094,     17.68631,     17.73641 ,
 fig = Figure(figsize=(6,6))
 fig.clear()
 a = fig.add_subplot(111)
-a.scatter(v,x,color='red')
-a.plot(p, range(2 +max(x)),color='blue')
-a.invert_yaxis()
 
-a.set_title ("Estimation Grid", fontsize=16)
-a.set_ylabel("Y", fontsize=14)
-a.set_xlabel("X", fontsize=14)
-"""
 canvas = FigureCanvasTkAgg(fig, master=c)
 canvas.get_tk_widget().pack()
-canvas.draw()
-"""
+
+
 
 data = {}
 headers = ['INCIDENT INFO','DESCRIPTION','START_DT','MODIFIED_DT','QUADRANT','Longitude','Latitude','location','Count','id']
@@ -101,8 +263,15 @@ for header in headers:
     data[header] = data_list
 
 scrollable_frame = ScrollableFrame(c)
-scrollable_frame.add_table(data)
-scrollable_frame.pack(fill=tk.BOTH,expand=True)
+"""
+scrollable_frame.add_image('incidents_2016.png')
+"""
+
+
+
+
+
+
 
 label = tk.Label(left_frame,text='Status:',fg='white',bg='grey')
 label.grid(row=14,column=1,padx=10,pady=10)
