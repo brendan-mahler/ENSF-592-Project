@@ -18,6 +18,7 @@ from matplotlib.figure import Figure
 from ScrollableFrame import *
 
 
+# Parses table into GUI frame
 def parse_to_frame(cur, headers):
     new_dict = {}
     for header in headers:
@@ -50,9 +51,13 @@ myclient = pymongo.MongoClient(
     'mongodb+srv://' + user.rstrip('\n') + ':' + password.rstrip(
         '\n') + '@cluster0.oyu7v.mongodb.net/' + database + '?retryWrites=true&w=majority')
 mydb = myclient["calgary_traffic"]
+
+# Volume collections
 col_v_16 = mydb["traffic_volume_2016"]
 col_v_17 = mydb["traffic_volume_2017"]
 col_v_18 = mydb["traffic_volume_2018"]
+
+# Create lsit of header names
 h_v_16 = []
 h_v_17 = []
 h_v_18 = []
@@ -66,16 +71,22 @@ for key in col_v_18.find_one():
     if key == '_id': continue
     h_v_18.append(key)
 
+# Parse volume data to frame
 d_v_16 = parse_to_frame(col_v_16.find().limit(100), h_v_16)
 d_v_17 = parse_to_frame(col_v_17.find().limit(100), h_v_17)
 d_v_18 = parse_to_frame(col_v_18.find().limit(100), h_v_18)
+
+# Parse sorted volume data to frame
 d_v_16_s = parse_to_frame(col_v_16.find().sort('volume', -1).limit(100), h_v_16)
 d_v_17_s = parse_to_frame(col_v_17.find().sort('volume', -1).limit(100), h_v_17)
 d_v_18_s = parse_to_frame(col_v_18.find().sort('VOLUME', -1).limit(100), h_v_18)
 
+# Get volume data
 volume_2016 = DBQuery(mydb, year='2016')
 volume_2017 = DBQuery(mydb, year='2017')
 volume_2018 = DBQuery(mydb, year='2018')
+
+# find the highest volume for a given year
 m_v_16 = volume_2016.total_max()
 m_v_17 = volume_2017.total_max()
 m_v_18 = volume_2018.total_max()
@@ -86,19 +97,24 @@ for key in col_a.find_one():
     if key == '_id': continue
     h_a.append(key)
 
+# Parse accident data to frame
 d_a_16 = parse_to_frame(col_a.find({'START_DT': {'$regex': '2016'}}).limit(100), h_a)
 d_a_17 = parse_to_frame(col_a.find({'START_DT': {'$regex': '2017'}}).limit(100), h_a)
 d_a_18 = parse_to_frame(col_a.find({'START_DT': {'$regex': '2018'}}).limit(100), h_a)
 
+# Sort accident data
 traffic_accidents = DBQuery(mydb, type='accident')
 d_a_16_s = limit(traffic_accidents.get_sorted_incident(year='2016'), 20)
 d_a_17_s = limit(traffic_accidents.get_sorted_incident(year='2017'), 20)
 d_a_18_s = limit(traffic_accidents.get_sorted_incident(year='2018'), 20)
+
+# Get the max amount of accidents for a given year
 m_a_16 = traffic_accidents.max_accident(year='2016')[1]
 m_a_17 = traffic_accidents.max_accident(year='2017')[1]
 m_a_18 = traffic_accidents.max_accident(year='2018')[1]
 
 
+# Find Button
 def b1CallBack():
     try:
         label2.configure(text='Executing...', bg='yellow')
@@ -134,6 +150,7 @@ def b1CallBack():
         label2.configure(text='Failure', bg='red')
 
 
+# Sort button
 def b2CallBack():
     try:
         label2.configure(text='Executing...', bg='yellow')
@@ -169,6 +186,7 @@ def b2CallBack():
         label2.configure(text='Failure', bg='red')
 
 
+# Analyze button
 def b3CallBack():
     try:
         label2.configure(text='Executing...', bg='yellow')
@@ -207,6 +225,7 @@ def b3CallBack():
         label2.configure(text='Failure', bg='red')
 
 
+# Map button
 def b4CallBack():
     try:
         label2.configure(text='Executing...', bg='yellow')
@@ -242,7 +261,9 @@ def b4CallBack():
         label2.configure(text='Failure', bg='red')
 
 
+# Create tkinter GUI
 top = tk.Tk()
+top.geometry("2000x600")
 left_frame = tk.Frame(top, height=480, width=240, bg='grey', borderwidth=50)
 left_frame.pack(side=tk.LEFT, fill='both')
 right_frame = tk.Frame(top, height=480, width=840)

@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 
+# Create scrollable frame
 class ScrollableFrame(ttk.Frame):
     def __init__(self, container, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
@@ -34,10 +35,11 @@ class ScrollableFrame(ttk.Frame):
         self.temp_frame = tk.Frame(self.scrollable_frame)
         self.temp_frame.pack(fill="both",expand=True)
         
-        
+    # Destroy the current frame
     def clear(self):
         self.temp_frame.destroy()
-        
+
+     # Add map image to the frame
     def add_image(self,file_name):
         self.clear()
         self.temp_frame = tk.Frame(self.scrollable_frame)
@@ -48,18 +50,18 @@ class ScrollableFrame(ttk.Frame):
         img.image = render
         img.pack(fill='both')
         
-        
+    # Add table to scrollable frame
     def add_table(self, data_frame):
         self.clear()
         self.temp_frame = tk.Frame(self.scrollable_frame)
         self.temp_frame.pack(fill="both",expand=True)
         headers = list(data_frame.keys())
         for i in range(len(headers)):
-            self.temp_frame.grid_columnconfigure(i,minsize=30*len(headers[i]),weight=1)
-            tk.Button(self.temp_frame,text=headers[i],fg='black',bg='yellow').grid(row=0,column=i,sticky='we')
+            self.temp_frame.grid_columnconfigure(i,minsize=20*len(headers[i]),weight=1)
+            tk.Label(self.temp_frame,text=headers[i],fg='black',bg='yellow').grid(row=0,column=i,sticky='we')
             for j in range(len(data_frame[headers[i]])):
                 tk.Label(self.temp_frame,text=str(data_frame[headers[i]][j]),borderwidth=1,relief='solid',height=3,wraplength=200).grid(row=j+1,column=i,sticky='we')
-        
+
 def test():
     top = tk.Tk()
     frame = ScrollableFrame(top)
