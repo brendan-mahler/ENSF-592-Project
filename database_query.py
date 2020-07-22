@@ -9,6 +9,7 @@ import pandas as pd
 import pymongo
 import operator
 
+# Decides what data to call based on input
 class DBQuery(dict):
     def __init__(self, database, type='volume', year='2016'):
         self.headers = []
@@ -35,7 +36,7 @@ class DBQuery(dict):
     
     def data_frame(self):
         return pd.DataFrame(self)
-    
+
     def get_year(self,year='2016'):
         new_dict = dict(self)
         for key in new_dict.keys():
@@ -44,7 +45,8 @@ class DBQuery(dict):
                 if year not in new_dict['START_DT'][i]:
                     new_dict[key].pop(i)
         return new_dict
-            
+
+    # Count the number of coordinates that are repeated
     def count(self, dictionary):
         strippables = string.ascii_letters + string.whitespace + '()\'\"'
         for key in dictionary.keys():
@@ -68,7 +70,7 @@ class DBQuery(dict):
         amount = 0
         amount_list = [0, 0, 0]
         for key in self.keys():
-            if 'volum' in key.lower():
+            if 'volume' in key.lower():
                 amount = max(self[key])
                 return amount
             elif key.lower() == 'count':
@@ -78,7 +80,8 @@ class DBQuery(dict):
                     elif '2018' in self['START_DT'][i]: amount_list[2] += self[key][i]
                 return amount_list
         return amount
-    
+
+    # Returns dictionary of incidents and corresponding counts.
     def get_incident_info(self,year='2016'):
         dict_unique = {}
         for i in range(len(self['INCIDENT INFO'])):
@@ -86,16 +89,19 @@ class DBQuery(dict):
                 dict_unique[self['INCIDENT INFO'][i]] = dict_unique.get(self['INCIDENT INFO'][i],0)+int(self['Count'][i])
         return dict_unique
 
+    # Return the highest number of accidents based on section name for a given year
     def max_accident(self, year='2020'):
         dict_unique = self.get_incident_info(year=year)
         max_count = max(dict_unique.items(), key=operator.itemgetter(1))
         return max_count
-            
+
+    # Sorts the incident info based on the count
     def sort_incident_info(self,year='2016'):
         dict_unique = self.get_incident_info(year=year)
         new_dict = {k:v for k,v in sorted(dict_unique.items(), key=lambda item:item[1],reverse=True)}
         return new_dict
-        
+
+    # Return dictionary of section names with highest number of incidents in decreasing order
     def get_sorted_incident(self,year='2016'):
         new_table = {}
         new_table['INCIDENT INFO'] = []
@@ -115,7 +121,8 @@ class DBQuery(dict):
             for i in range(num,n,1):
                 new_dict[key].pop(num)
         return new_dict
-    
+
+    # Gets a list of coordinates as tuples
     def get_coordinates(self, year='2016'):
         list_coordinates = []
         headers = list(self.keys())
@@ -143,15 +150,20 @@ def find_year(collection, year='', limit=1):
     return collection.find({"START_DT":{"$regex":year}}).limit(limit)
 
 def test():
-    secret = open('confidentials.txt')
-    info = []
-    for line in secret:
-        info.append(line.strip())
-    myclient = pymongo.MongoClient("mongodb+srv://"+info[1]+":"+info[0]+"@cluster0.oyu7v.mongodb.net/"+info[2]+"?retryWrites=true&w=majority")
+    f = open('credentials')
+    lines = f.readlines()
+    user = lines[0]
+    password = lines[1]
+    database = lines[2]
+
+    myclient = pymongo.MongoClient(
+        'mongodb+srv://' + user.rstrip('\n') + ':' + password.rstrip(
+            '\n') + '@cluster0.oyu7v.mongodb.net/' + database + '?retryWrites=true&w=majority')
     mydb = myclient["calgary_traffic"]
-    print(mydb.list_collection_names())
-    query = DBQuery(mydb,type='incident')      
-    print(query.limit(3))
+    data = DBQuery(mydb)
+    incidents = mydb["traffic_incidents"]
+    print(incidents.get_incident_info())
+
     
 if __name__ == '__main__':
     test()

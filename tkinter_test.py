@@ -28,7 +28,7 @@ def parse_to_frame(cur, headers):
             new_dict[header].append(row[header])
     return new_dict
 
-
+#Sets the max amount of rows displayed
 def limit(old_dict, num):
     new_dict = dict(old_dict)
     for key in old_dict.keys():
@@ -86,23 +86,26 @@ volume_2016 = DBQuery(mydb, year='2016')
 volume_2017 = DBQuery(mydb, year='2017')
 volume_2018 = DBQuery(mydb, year='2018')
 
+
 # find the highest volume for a given year
 m_v_16 = volume_2016.total_max()
 m_v_17 = volume_2017.total_max()
 m_v_18 = volume_2018.total_max()
 
+# Get headers for incident table
 col_a = mydb["traffic_incidents"]
 h_a = []
 for key in col_a.find_one():
     if key == '_id': continue
     h_a.append(key)
 
-# Parse accident data to frame
+
+# Parse accident data to frame. Show first 100 rows
 d_a_16 = parse_to_frame(col_a.find({'START_DT': {'$regex': '2016'}}).limit(100), h_a)
 d_a_17 = parse_to_frame(col_a.find({'START_DT': {'$regex': '2017'}}).limit(100), h_a)
 d_a_18 = parse_to_frame(col_a.find({'START_DT': {'$regex': '2018'}}).limit(100), h_a)
 
-# Sort accident data
+# Sort accident data. Show top 20 accident locations
 traffic_accidents = DBQuery(mydb, type='accident')
 d_a_16_s = limit(traffic_accidents.get_sorted_incident(year='2016'), 20)
 d_a_17_s = limit(traffic_accidents.get_sorted_incident(year='2017'), 20)
@@ -303,5 +306,6 @@ label = tk.Label(left_frame, text='Status:', fg='white', bg='grey')
 label.grid(row=14, column=1, padx=10, pady=10)
 label2 = tk.Label(left_frame, text='Pending...', bg='yellow', width=30, height=3)
 label2.grid(row=15, column=1, pady=5)
+
 
 top.mainloop()
